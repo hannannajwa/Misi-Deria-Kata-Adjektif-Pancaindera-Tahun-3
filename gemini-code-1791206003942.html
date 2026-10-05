@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Misi Deria: Kata Adjektif Pancaindera</title>
+  <!-- Three.js Library untuk 3D Roblox-style Kampung -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; user-select: none; }
+    body, html { width: 100%; height: 100%; overflow: hidden; background-color: #f0f8ff; }
+
+    /* UI Overlay Containers */
+    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; z-index: 10; }
+    .active { display: flex; }
+
+    /* Card Styling */
+    .card { background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); max-width: 650px; width: 90%; border: 4px solid #70a1ff; position: relative; }
+    h1 { color: #2e86de; font-size: 2.2rem; margin-bottom: 15px; }
+    h2 { color: #333; font-size: 1.6rem; margin-bottom: 12px; }
+    p { color: #444; font-size: 1.2rem; margin-bottom: 15px; line-height: 1.5; }
+
+    /* Buttons */
+    .btn { background: #10ac84; color: white; border: none; padding: 14px 28px; font-size: 1.2rem; font-weight: bold; border-radius: 50px; cursor: pointer; margin: 8px; box-shadow: 0 5px 0 #0e8364; transition: all 0.1s ease; }
+    .btn:active { transform: translateY(4px); box-shadow: 0 1px 0 #0e8364; }
+    .btn-sec { background: #54a0ff; box-shadow: 0 5px 0 #2e86de; }
+    .btn-warn { background: #ff9f43; box-shadow: 0 5px 0 #ee5253; }
+    .btn-speak { background: #ff6b6b; box-shadow: 0 5px 0 #ee5253; padding: 8px 16px; font-size: 1rem; border-radius: 20px; }
+
+    /* Options Grid */
+    .options-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin: 15px 0; width: 100%; }
+    .option-btn { background: #f1f2f6; border: 3px solid #ced6e0; padding: 15px; font-size: 1.2rem; font-weight: bold; border-radius: 15px; cursor: pointer; color: #2f3542; transition: 0.2s; }
+    .option-btn:hover { background: #eccc68; border-color: #ffa502; }
+
+    /* HUD Bar */
+    #hud { position: absolute; top: 15px; left: 15px; right: 15px; display: none; justify-content: space-between; align-items: center; z-index: 5; pointer-events: none; }
+    .hud-box { background: rgba(255,255,255,0.9); padding: 10px 20px; border-radius: 30px; font-weight: bold; font-size: 1.1rem; color: #2f3542; border: 2px solid #70a1ff; box-shadow: 0 4px 10px rgba(0,0,0,0.1); pointer-events: auto; }
+
+    /* Touch Controls */
+    #touch-controls { position: absolute; bottom: 20px; left: 20px; right: 20px; display: none; justify-content: space-between; z-index: 5; pointer-events: none; }
+    .dpad { display: grid; grid-template-columns: repeat(3, 50px); gap: 5px; pointer-events: auto; }
+    .dbtn { width: 50px; height: 50px; background: rgba(255,255,255,0.7); border: 2px solid #54a0ff; border-radius: 10px; font-weight: bold; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
+    .action-btn { width: 70px; height: 70px; background: rgba(16, 172, 132, 0.8); border: 3px solid white; border-radius: 50%; color: white; font-weight: bold; font-size: 1.1rem; pointer-events: auto; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+
+    /* Manual & Note Cards */
+    .manual-cards { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-bottom: 15px; }
+    .m-card { background: #eccc68; padding: 12px; border-radius: 12px; width: 140px; font-weight: bold; color: #2f3542; border: 2px solid #ffa502; }
+
+    /* Canvas 3D */
+    #game-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+  </style>
+</head>
+<body>
+
+  <div id="game-container"></div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div class="hud-box" id="mission-hud">Misi: 1/5 (Deria Rasa)</div>
+    <div class="hud-box" id="score-hud">Mata: 0</div>
+    <button class="btn btn-warn" onclick="togglePause()">Jeda</button>
+  </div>
+
+  <!-- Touch Controls (Mobile) -->
+  <div id="touch-controls">
+    <div class="dpad">
+      <div></div><div class="dbtn" id="btn-up">▲</div><div></div>
+      <div class="dbtn" id="btn-left">◀</div><div></div><div class="dbtn" id="btn-right">▶</div>
+      <div></div><div class="dbtn" id="btn-down">▼</div><div></div>
+    </div>
+    <div class="action-btn" id="btn-interact">Buka</div>
+  </div>
+
+  <!-- Skrin 1: Muka Hadapan -->
+  <div id="screen-start" class="screen active">
+    <div class="card">
+      <h1>Misi Deria</h1>
+      <p style="font-weight: bold; color: #70a1ff;">Kata Adjektif Pancaindera Tahun 3</p>
+      <p>Selamat datang Pengembara Cilik! Mari bantu memulihkan 5 Kuasa Deria di Kampung Malaysia!</p>
+      <button class="btn" onclick="goToScreen('screen-manual')">Mula Main</button>
+      <button class="btn btn-sec" onclick="goToScreen('screen-manual')">Panduan</button>
+    </div>
+  </div>
+
+  <!-- Skrin 2: Manual Penggunaan -->
+  <div id="screen-manual" class="screen">
+    <div class="card">
+      <h2>Cara Bermain</h2>
+      <div class="manual-cards">
+        <div class="m-card">1. Baca arahan</div>
+        <div class="m-card">2. Lihat gambar/objek</div>
+        <div class="m-card">3. Pilih jawapan</div>
+        <div class="m-card">4. Tekan Semak</div>
+        <div class="m-card">5. Jika salah, cuba lagi</div>
+        <div class="m-card">6. Kumpul mata</div>
+      </div>
+      <button class="btn btn-speak" onclick="speakText('Cara bermain. Satu, Baca arahan. Dua, Lihat gambar. Tiga, Pilih jawapan. Empat, Tekan Semak. Lima, Jika salah, cuba lagi.')">🔊 Ulang Arahan Audio</button><br><br>
+      <button class="btn" onclick="goToScreen('screen-notes')">Seterusnya (Nota)</button>
+    </div>
+  </div>
+
+  <!-- Skrin 3: Nota Pembelajaran Interaktif -->
+  <div id="screen-notes" class="screen">
+    <div class="card">
+      <h2 id="note-title">Nota: Deria Rasa</h2>
+      <p id="note-desc">Kata adjektif pancaindera ialah perkataan yang menerangkan sifat atau keadaan sesuatu berdasarkan pengalaman deria.</p>
+      <div id="note-content" style="background: #f1f2f6; padding: 15px; border-radius: 15px; margin-bottom: 15px;">
+        <p style="font-size: 1.4rem; font-weight: bold; color: #ff6b6b;" id="note-words">manis, masam, pahit, masin, pedas, tawar</p>
+        <p id="note-example">Contoh: "Gula itu manis."</p>
+      </div>
+      <button class="btn btn-speak" onclick="speakCurrentNote()">🔊 Dengar Nota</button>
+      <button class="btn btn-sec" onclick="nextNote()">Nota Seterusnya</button>
+      <button class="btn" onclick="goToScreen('screen-warmup')">Ke Latihan Pemanasan</button>
+    </div>
+  </div>
+
+  <!-- Skrin 4: Latihan Pemanasan -->
+  <div id="screen-warmup" class="screen">
+    <div class="card">
+      <h2>Latihan Pemanasan</h2>
+      <p>Pilih perkataan yang sesuai untuk soalan mudah ini:</p>
+      <p style="font-weight: bold; font-size: 1.3rem;">Apakah rasa untuk Gula?</p>
+      <div class="options-grid">
+        <button class="option-btn" onclick="checkWarmup(true)">Manis</button>
+        <button class="option-btn" onclick="checkWarmup(false)">Masin</button>
+        <button class="option-btn" onclick="checkWarmup(false)">Pahit</button>
+      </div>
+      <p id="warmup-feedback" style="font-weight: bold;"></p>
+      <button id="warmup-next" class="btn" style="display:none;" onclick="startMainGame()">Masuk Kampung 3D</button>
+    </div>
+  </div>
+
+  <!-- Skrin Modal Soalan (Misi 1-5 & Cabaran) -->
+  <div id="screen-quiz" class="screen">
+    <div class="card">
+      <h2 id="quiz-title">Misi 1: Deria Rasa</h2>
+      <p id="quiz-question">Soalan akan dipaparkan di sini...</p>
+      <button class="btn btn-speak" onclick="speakQuiz()">🔊 Ulang Arahan</button>
+      <button class="btn btn-warn" onclick="showCurrentNoteModal()">📖 Lihat Nota</button>
+      <div class="options-grid" id="quiz-options"></div>
+      <p id="quiz-feedback" style="font-weight: bold; margin-top: 10px;"></p>
+      <button id="quiz-continue" class="btn" style="display:none;" onclick="closeQuizModal()">Teruskan Misi</button>
+    </div>
+  </div>
+
+  <!-- Skrin 7: Keputusan Akhir -->
+  <div id="screen-results" class="screen">
+    <div class="card">
+      <h1>Tahniah! Misi Selesai!</h1>
+      <p id="res-score">Jumlah Mata: 100</p>
+      <p id="res-badge">Lencana: 🏆 Juara Pancaindera</p>
+      <div style="text-align: left; background: #f1f2f6; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+        <p><strong>Kamu sudah bagus dalam:</strong> <span id="res-good">Semua Deria</span></p>
+        <p><strong>Mari ulang kaji:</strong> <span id="res-improve">Tiada, hebat sekali!</span></p>
+      </div>
+      <p>Tahnah! Kamu semakin mahir menggunakan kata adjektif pancaindera dalam kehidupan seharian!</p>
+      <button class="btn" onclick="restartGame()">Main Semula</button>
+      <button class="btn btn-sec" onclick="goToScreen('screen-notes')">Ulang Kaji Nota</button>
+    </div>
+  </div>
+
+  <script>
+    /* --- DATA NOTA & SOALAN --- */
+    const notesData = [
+      { title: "Deria Rasa (Melalui Lidah)", words: "manis, masam, pahit, masin, pedas, tawar", ex: "Gula itu manis. Ubat itu pahit.", text: "Deria rasa. Perkataan seperti manis, masam, pahit, masin, pedas, tawar." },
+      { title: "Deria Pandang / Lihat (Melalui Mata)", words: "cantik, terang, gelap, jelas, berwarna-warni", ex: "Bunga itu cantik. Malam itu gelap.", text: "Deria pandang. Perkataan seperti cantik, terang, gelap, jelas, berwarna-warni." },
+      { title: "Deria Dengar (Melalui Telinga)", words: "merdu, bising, kuat, perlahan, sunyi", ex: "Burung menyanyi merdu. Pasar itu bising.", text: "Deria dengar. Perkataan seperti merdu, bising, kuat, perlahan, sunyi." },
+      { title: "Deria Bau (Melalui Hidung)", words: "wangi, harum, busuk, hapak", ex: "Minyak wangi itu harum. Sampah itu busuk.", text: "Deria bau. Perkataan seperti wangi, harum, busuk, hapak." },
+      { title: "Deria Sentuh (Melalui Kulit)", words: "kasar, keras, lembut, halus, licin", ex: "Batu itu keras. Span itu lembut.", text: "Deria sentuh. Perkataan seperti kasar, keras, lembut, halus, licin." }
+    ];
+
+    const missionsData = [
+      {
+        id: 1, title: "Misi 1: Jom Rasa!", sense: "Rasa",
+        questions: [
+          { q: "Apakah rasa bagi Cili Api?", opts: ["Pedas", "Manis", "Masin"], ans: 0, hint: "Cili rasanya menggigit lidah!" },
+          { q: "Garam digunakan dalam masakan supaya rasanya...", opts: ["Pahit", "Masin", "Tawar"], ans: 1, hint: "Garam memberi rasa masin." },
+          { q: "Lengkapkan ayat: Air kosong itu tidak mempunyai rasa, jadi rasanya ____.", opts: ["Tawar", "Masam", "Manis"], ans: 0, hint: "Air tanpa gula/garam dinamakan tawar." }
+        ]
+      },
+      {
+        id: 2, title: "Misi 2: Jom Lihat!", sense: "Lihat",
+        questions: [
+          { q: "Pelangi di langit mempunyai pelbagai warna. Pelangi itu...", opts: ["Berwarna-warni", "Gelap", "Kabur"], ans: 0, hint: "Banyak warna bermaksud berwarna-warni." },
+          { q: "Apabila lampu dimatikan, bilik menjadi...", opts: ["Terang", "Gelap", "Jelas"], ans: 1, hint: "Tanpa cahaya, keadaan menjadi gelap." }
+        ]
+      },
+      {
+        id: 3, title: "Misi 3: Jom Dengar!", sense: "Dengar",
+        questions: [
+          { q: "Suara penyanyi itu sangat sedap didengar. Suaranya...", opts: ["Merdu", "Bising", "Kuat"], ans: 0, hint: "Suara sedap dinamakan merdu." },
+          { q: "Keadaan di perpustakaan sangat tenang dan tidak ada bunyi. Perpustakaan itu...", opts: ["Sunyi", "Bising", "Nyaring"], ans: 0, hint: "Tiada bunyi bermaksud sunyi." }
+        ]
+      },
+      {
+        id: 4, title: "Misi 4: Jom Hidu!", sense: "Bau",
+        questions: [
+          { q: "Bunga mawar mengeluarkan bau yang sangat menyenangkan. Bunga itu...", opts: ["Wangi", "Busuk", "Hapak"], ans: 0, hint: "Bau menyenangkan dinamakan wangi atau harum." },
+          { q: "Baju yang basah dan disimpan lama di dalam beg berbau...", opts: ["Hapak", "Harum", "Manis"], ans: 0, hint: "Pakaian lembap berbau hapak." }
+        ]
+      },
+      {
+        id: 5, title: "Misi 5: Jom Sentuh!", sense: "Sentuh",
+        questions: [
+          { q: "Permukaan batu batan berasa...", opts: ["Keras", "Lembut", "Licin"], ans: 0, hint: "Batu tidak mudah dipicit, ia keras." },
+          { q: "Kain sutera rasanya sangat lembut dan...", opts: ["Licin", "Kasar", "Pahit"], ans: 0, hint: "Permukaan rata dan rata dipanggil licin." }
+        ]
+      },
+      {
+        id: 6, title: "Cabaran Akhir: Campuran Pancaindera", sense: "Campuran",
+        questions: [
+          { q: "Kopi tanpa gula rasanya pahit. 'Pahit' ialah kata adjektif deria...", opts: ["Rasa", "Bau", "Dengar"], ans: 0, hint: "Pahit dirasa menggunakan lidah." },
+          { q: "Lampu jalan itu terang. 'Terang' ialah kata adjektif deria...", opts: ["Pandang", "Sentuh", "Rasa"], ans: 0, hint: "Terang dilihat menggunakan mata." }
+        ]
+      }
+    ];
+
+    /* --- GAME STATE --- */
+    let score = 0;
+    let currentMissionIdx = 0;
+    let currentQuestionIdx = 0;
+    let currentNoteIdx = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+
+    /* --- AUDIO SYNTHESIS --- */
+    function speakText(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'ms-MY';
+        msg.rate = 0.85; // Kelajuan sesuai untuk pendidikan inklusif
+        window.speechSynthesis.speak(msg);
+      }
+    }
+
+    /* --- UI NAVIGATION --- */
+    function goToScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function togglePause() {
+      alert("Permainan Dijeda. Tekan OK untuk menyambung.");
+    }
+
+    /* --- NOTA INTERAKTIF --- */
+    function updateNoteUI() {
+      const data = notesData[currentNoteIdx];
+      document.getElementById('note-title').innerText = "Nota: " + data.title;
+      document.getElementById('note-words').innerText = data.words;
+      document.getElementById('note-example').innerText = "Contoh: " + data.ex;
+    }
+
+    function speakCurrentNote() {
+      speakText(notesData[currentNoteIdx].text);
+    }
+
+    function nextNote() {
+      currentNoteIdx = (currentNoteIdx + 1) % notesData.length;
+      updateNoteUI();
+    }
+
+    /* --- LATIHAN PEMANASAN --- */
+    function checkWarmup(isCorrect) {
+      const fb = document.getElementById('warmup-feedback');
+      if(isCorrect) {
+        fb.style.color = '#10ac84';
+        fb.innerText = 'Betul! Syabas! Anda sedia untuk berpetualang!';
+        document.getElementById('warmup-next').style.display = 'inline-block';
+        speakText('Betul! Syabas!');
+      } else {
+        fb.style.color = '#ee5253';
+        fb.innerText = 'Cuba lagi! Gula berasa manis.';
+        speakText('Cuba lagi! Gula berasa manis.');
+      }
+    }
+
+    /* --- MISI & QUIZ LOGIC --- */
+    function startMainGame() {
+      goToScreen('none');
+      document.getElementById('hud').style.display = 'flex';
+      document.getElementById('touch-controls').style.display = 'flex';
+      init3DWorld();
+      updateHUD();
+    }
+
+    function updateHUD() {
+      document.getElementById('mission-hud').innerText = `Misi: ${currentMissionIdx + 1}/6 (${missionsData[currentMissionIdx].sense})`;
+      document.getElementById('score-hud').innerText = `Mata: ${score}`;
+    }
+
+    function triggerQuizModal() {
+      const mission = missionsData[currentMissionIdx];
+      const qData = mission.questions[currentQuestionIdx];
+      
+      document.getElementById('quiz-title').innerText = mission.title;
+      document.getElementById('quiz-question').innerText = qData.q;
+      document.getElementById('quiz-feedback').innerText = '';
+      document.getElementById('quiz-continue').style.display = 'none';
+
+      const optsContainer = document.getElementById('quiz-options');
+      optsContainer.innerHTML = '';
+
+      qData.opts.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = opt;
+        btn.onclick = () => answerQuiz(idx);
+        optsContainer.appendChild(btn);
+      });
+
+      goToScreen('screen-quiz');
+      speakQuiz();
+    }
+
+    function speakQuiz() {
+      const qData = missionsData[currentMissionIdx].questions[currentQuestionIdx];
+      speakText(qData.q);
+    }
+
+    function showCurrentNoteModal() {
+      alert(`NOTA PANCAINDERA:\n\n${notesData[Math.min(currentMissionIdx, 4)].title}\nPerkataan: ${notesData[Math.min(currentMissionIdx, 4)].words}`);
+    }
+
+    function answerQuiz(selectedIdx) {
+      const qData = missionsData[currentMissionIdx].questions[currentQuestionIdx];
+      const fb = document.getElementById('quiz-feedback');
+
+      if(selectedIdx === qData.ans) {
+        score += 20;
+        correctCount++;
+        fb.style.color = '#10ac84';
+        fb.innerText = 'Betul! Hebat sekali!';
+        speakText('Betul! Hebat sekali!');
+        document.getElementById('quiz-continue').style.display = 'inline-block';
+        updateHUD();
+      } else {
+        wrongCount++;
+        fb.style.color = '#ee5253';
+        fb.innerText = `Cuba lagi. Petunjuk: ${qData.hint}`;
+        speakText(`Cuba lagi. Petunjuk: ${qData.hint}`);
+      }
+    }
+
+    function closeQuizModal() {
+      const mission = missionsData[currentMissionIdx];
+      currentQuestionIdx++;
+
+      if(currentQuestionIdx >= mission.questions.length) {
+        currentMissionIdx++;
+        currentQuestionIdx = 0;
+        
+        if(currentMissionIdx >= missionsData.length) {
+          endGame();
+          return;
+        } else {
+          alert(`Misi selesai! Pos kawalan seterusnya dibuka dalam Kampung 3D!`);
+          moveNPCForNextMission();
+        }
+      }
+      
+      goToScreen('none');
+      updateHUD();
+    }
+
+    function endGame() {
+      goToScreen('screen-results');
+      document.getElementById('hud').style.display = 'none';
+      document.getElementById('touch-controls').style.display = 'none';
+      document.getElementById('res-score').innerText = `Jumlah Mata: ${score}`;
+      
+      if(score >= 100) {
+        document.getElementById('res-badge').innerText = 'Lencana: 🏆 Pakar Utama Pancaindera';
+      } else {
+        document.getElementById('res-badge').innerText = 'Lencana: 🌟 Penjelajah Deria';
+      }
+    }
+
+    function restartGame() {
+      score = 0;
+      currentMissionIdx = 0;
+      currentQuestionIdx = 0;
+      correctCount = 0;
+      wrongCount = 0;
+      goToScreen('screen-start');
+    }
+
+    /* --- THREE.JS 3D ROBLOX-STYLE KAMPUNG WORLD --- */
+    let scene, camera, renderer, player, npc;
+    let keys = {};
+
+    function init3DWorld() {
+      const container = document.getElementById('game-container');
+      if (container.children.length > 0) return; // ELAK RE-INIT
+
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x87ceeb); // Langit cerah
+
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      container.appendChild(renderer.domElement);
+
+      // Pencahayaan
+      const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+      scene.add(ambientLight);
+      const dirLight = new THREE.DirectionalLight(0xffffff, 0.5);
+      dirLight.position.set(20, 40, 20);
+      scene.add(dirLight);
+
+      // Tanah Kampung (Hijau)
+      const groundGeo = new THREE.PlaneGeometry(100, 100);
+      const groundMat = new THREE.MeshLambertMaterial({ color: 0x7bed9f });
+      const ground = new THREE.Mesh(groundGeo, groundMat);
+      ground.rotation.x = -Math.PI / 2;
+      scene.add(ground);
+
+      // Jalan Tar / Laluan (Coklat Kelabu)
+      const pathGeo = new THREE.PlaneGeometry(8, 100);
+      const pathMat = new THREE.MeshLambertMaterial({ color: 0xdcdde1 });
+      const path = new THREE.Mesh(pathGeo, pathMat);
+      path.rotation.x = -Math.PI / 2;
+      path.position.y = 0.01;
+      scene.add(path);
+
+      // Rumah Kampung Tradisional (Roblox Blocky Style)
+      createHouse(-12, 0, -10, 0xff7f50);
+      createHouse(12, 0, -20, 0x70a1ff);
+      createTrees();
+
+      // Watak Utama (Player Blocky)
+      player = createBlockyCharacter(0x2e86de);
+      player.position.set(0, 1, 15);
+      scene.add(player);
+
+      // NPC Pembantu Misi
+      npc = createBlockyCharacter(0xff6b6b);
+      npc.position.set(0, 1, 5);
+      scene.add(npc);
+
+      // Papan Makluman Misi di Sebelah NPC
+      const signGeo = new THREE.BoxGeometry(2, 2, 0.2);
+      const signMat = new THREE.MeshLambertMaterial({ color: 0xeccc68 });
+      const sign = new THREE.Mesh(signGeo, signMat);
+      sign.position.set(2.5, 1.5, 5);
+      scene.add(sign);
+
+      camera.position.set(0, 6, 22);
+
+      // Kawalan Papan Kekunci
+      window.addEventListener('keydown', e => keys[e.key] = true);
+      window.addEventListener('keyup', e => keys[e.key] = false);
+
+      // Mobile Touch Listeners
+      setupTouchControls();
+
+      // Resize Listener
+      window.addEventListener('resize', onWindowResize);
+
+      animate3D();
+    }
+
+    function createBlockyCharacter(colorHex) {
+      const group = new THREE.Group();
+      // Badan
+      const bodyGeo = new THREE.BoxGeometry(1, 1.2, 0.6);
+      const bodyMat = new THREE.MeshLambertMaterial({ color: colorHex });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.y = 0.6;
+      group.add(body);
+      // Kepala
+      const headGeo = new THREE.BoxGeometry(0.8, 0.8, 0.8);
+      const headMat = new THREE.MeshLambertMaterial({ color: 0xffdbac });
+      const head = new THREE.Mesh(headGeo, headMat);
+      head.position.y = 1.6;
+      group.add(head);
+      return group;
+    }
+
+    function createHouse(x, y, z, colorHex) {
+      const houseGroup = new THREE.Group();
+      // Dinding
+      const wallGeo = new THREE.BoxGeometry(6, 4, 6);
+      const wallMat = new THREE.MeshLambertMaterial({ color: colorHex });
+      const wall = new THREE.Mesh(wallGeo, wallMat);
+      wall.position.y = 2;
+      houseGroup.add(wall);
+      // Bumbung
+      const roofGeo = new THREE.ConeGeometry(5, 3, 4);
+      const roofMat = new THREE.MeshLambertMaterial({ color: 0xb2bec3 });
+      const roof = new THREE.Mesh(roofGeo, roofMat);
+      roof.position.y = 5.5;
+      roof.rotation.y = Math.PI / 4;
+      houseGroup.add(roof);
+
+      houseGroup.position.set(x, y, z);
+      scene.add(houseGroup);
+    }
+
+    function createTrees() {
+      for(let i = 0; i < 8; i++) {
+        const tree = new THREE.Group();
+        const trunkGeo = new THREE.CylinderGeometry(0.3, 0.4, 2);
+        const trunkMat = new THREE.MeshLambertMaterial({ color: 0x8395a7 });
+        const trunk = new THREE.Mesh(trunkGeo, trunkMat);
+        trunk.position.y = 1;
+        tree.add(trunk);
+
+        const leavesGeo = new THREE.DodecahedronGeometry(1.5);
+        const leavesMat = new THREE.MeshLambertMaterial({ color: 0x10ac84 });
+        const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+        leaves.position.y = 2.5;
+        tree.add(leaves);
+
+        tree.position.set((i % 2 === 0 ? -1 : 1) * (10 + Math.random() * 5), 0, -30 + i * 8);
+        scene.add(tree);
+      }
+    }
+
+    function setupTouchControls() {
+      const bindBtn = (id, keyName) => {
+        const el = document.getElementById(id);
+        el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[keyName] = true; });
+        el.addEventListener('touchend', (e) => { e.preventDefault(); keys[keyName] = false; });
+      };
+      bindBtn('btn-up', 'ArrowUp');
+      bindBtn('btn-down', 'ArrowDown');
+      bindBtn('btn-left', 'ArrowLeft');
+      bindBtn('btn-right', 'ArrowRight');
+
+      document.getElementById('btn-interact').addEventListener('click', checkNPCInteraction);
+    }
+
+    function moveNPCForNextMission() {
+      npc.position.z -= 6;
+    }
+
+    function checkNPCInteraction() {
+      const dist = player.position.distanceTo(npc.position);
+      if (dist < 3.5) {
+        triggerQuizModal();
+      } else {
+        speakText("Sila berjalan mendekati Abang Pos Kod di hadapan!");
+        alert("Sila berjelajah dan mendekati NPC di hadapan untuk memulakan Misi!");
+      }
+    }
+
+    function animate3D() {
+      requestAnimationFrame(animate3D);
+
+      const speed = 0.15;
+      if (keys['ArrowUp'] || keys['w'] || keys['W']) player.position.z -= speed;
+      if (keys['ArrowDown'] || keys['s'] || keys['S']) player.position.z += speed;
+      if (keys['ArrowLeft'] || keys['a'] || keys['A']) player.position.x -= speed;
+      if (keys['ArrowRight'] || keysSebagai pengembang aplikasi berpengalaman 5 tahun, saya telah merancang dan merealisasikan kode sumber lengkap untuk aplikasi permainan berbasis web **"Misi Deria: Kata Adjektif Pancaindera"**. Permainan ini dirancang khusus untuk memenuhi kebutuhan pembelajaran murid Tahun 3 Pendidikan Inklusif dengan pendekatan visual yang ramah, navigasi sederhana, dan bertahap.
+
+Berikut adalah implementasi lengkap dalam satu berkas HTML yang menggabungkan HTML, CSS, dan JavaScript secara *standalone* (dapat langsung dibuka di *browser* komputer maupun perangkat seluler tanpa perlu *library* luar).
+
+---
+
+### Kode Sumber Permainan Web (`index.html`)
+
+```html
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Misi Deria: Kata Adjektif Pancaindera</title>
+    <style>
+        :root {
+            --primary-color: #FFB7B2;
+            --secondary-color: #B5EAD7;
+            --accent-color: #E2F0CB;
+            --bg-color: #FFF5F5;
+            --card-bg: #FFFFFF;
+            --text-color: #4A4A4A;
+            --correct-color: #77DD77;
+            --wrong-color: #FF6961;
+            --font-family: 'Comic Sans MS', 'Chalkboard SE', 'Arial', sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: var(--font-family);
+            user-select: none;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 900px;
+            min-height: 600px;
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            border: 4px solid var(--primary-color);
+        }
+
+        /* Header / Bar Kemajuan */
+        header {
+            background-color: var(--primary-color);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .progress-bar-container {
+            width: 40%;
+            background-color: rgba(255, 255, 255, 0.4);
+            border-radius: 10px;
+            height: 18px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background-color: #FFD1DC;
+            transition: width 0.3s ease;
+        }
+
+        /* Skrin Utama */
+        .screen {
+            display: none;
+            padding: 30px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            flex: 1;
+        }
+
+        .screen.active {
+            display: flex;
+        }
+
+        /* Tajuk & Teks */
+        h1 { font-size: 2.2rem; margin-bottom: 10px; color: #FF6B6B; }
+        h2 { font-size: 1.8rem; margin-bottom: 15px; color: #4A4A4A; }
+        p { font-size: 1.2rem; line-height: 1.6; margin-bottom: 20px; }
+
+        /* Butang Utama */
+        .btn {
+            background-color: var(--secondary-color);
+            color: #333;
+            border: 3px solid #84D2C5;
+            padding: 15px 35px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 10px;
+            transition: transform 0.2s, background-color 0.2s;
+            box-shadow: 0 5px 0 #84D2C5;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            background-color: #9CE3CC;
+        }
+
+        .btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 2px 0 #84D2C5;
+        }
+
+        .btn-secondary {
+            background-color: #C7CEEA;
+            border-color: #9FA8DA;
+            box-shadow: 0 5px 0 #9FA8DA;
+        }
+
+        /* Grid Kad / Pilihan */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .card {
+            background-color: #FFF0F5;
+            border: 3px solid #FFC0CB;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card:hover {
+            transform: scale(1.03);
+            background-color: #FFE4E1;
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        /* Maklum Balas */
+        .feedback-box {
+            min-height: 60px;
+            margin-top: 15px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            border-radius: 10px;
+            padding: 10px 20px;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feedback-correct { background-color: #D4EDDA; color: #155724; border: 2px solid var(--correct-color); }
+        .feedback-wrong { background-color: #F8D7DA; color: #721C24; border: 2px solid var(--wrong-color); }
+
+        /* Panel Kawalan Bawah */
+        .control-panel {
+            margin-top: auto;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            width: 100%;
+            padding-top: 15px;
+        }
+
+        .btn-small {
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            border-radius: 15px;
+        }
+
+        /* Visual Pengembara Blok (Inspirasi Roblox) */
+        .block-avatar {
+            width: 80px;
+            height: 100px;
+            background: #FFD93D;
+            border: 4px solid #333;
+            border-radius: 10px;
+            margin: 0 auto 15px;
+            position: relative;
+        }
+        .block-avatar::before {
+            content: "👀";
+            font-size: 2rem;
+            position: absolute;
+            top: 20px;
+            left: 18px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- Header Permainan -->
+    <header id="game-header" style="display:none;">
+        <div id="stage-title">Misi 1</div>
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progress-bar"></div>
+        </div>
+        <div>Mata: <span id="score-display">0</span></div>
+    </header>
+
+    <!-- Skrin 1: Muka Hadapan -->
+    <div id="screen-1" class="screen active">
+        <div class="block-avatar"></div>
+        <h1>Misi Deria</h1>
+        <h2>Kata Adjektif Pancaindera</h2>
+        <p>Bantu pengembara blok memulihkan Kuasa 5 Pancaindera di Kampung Malaysia!</p>
+        <div>
+            <button class="btn" onclick="goToScreen(2)">Mula</button>
+            <button class="btn btn-secondary" onclick="openManual()">Panduan</button>
+        </div>
+    </div>
+
+    <!-- Skrin 2: Manual Penggunaan -->
+    <div id="screen-2" class="screen">
+        <h2>Panduan Bermain</h2>
+        <div class="grid-container" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="card"><span class="card-icon">1️⃣</span>1. Baca arahan.</div>
+            <div class="card"><span class="card-icon">2️⃣</span>2. Lihat gambar.</div>
+            <div class="card"><span class="card-icon">3️⃣</span>3. Pilih jawapan.</div>
+            <div class="card"><span class="card-icon">4️⃣</span>4. Tekan Semak.</div>
+            <div class="card"><span class="card-icon">5️⃣</span>5. Jika salah, cuba lagi.</div>
+            <div class="card"><span class="card-icon">6️⃣</span>6. Kumpul mata!</div>
+        </div>
+        <div class="control-panel">
+            <button class="btn btn-secondary btn-small" onclick="speakText('Baca arahan. Lihat gambar. Pilih jawapan. Tekan Semak. Jika salah, cuba lagi. Kumpul mata!')">🔊 Ulang Arahan</button>
+            <button class="btn" onclick="startNota()">Seterusnya</button>
+        </div>
+    </div>
+
+    <!-- Skrin 3: Nota Pembelajaran Interaktif -->
+    <div id="screen-3" class="screen">
+        <h2 id="nota-title">Deria Rasa</h2>
+        <div id="nota-icon" style="font-size: 5rem; margin: 10px;">👅</div>
+        <p id="nota-def" style="background-color: #FFF0F5; padding: 15px; border-radius: 10px; max-width: 600px;">
+            <strong>Kata adjektif pancaindera:</strong> Perkataan yang menerangkan sifat atau keadaan sesuatu berdasarkan pengalaman deria.
+        </p>
+        <p id="nota-content">Contoh kata adjektif: <strong>manis, masam, pahit, masin, pedas, tawar</strong></p>
+        <p id="nota-example"><em>"Gula itu manis."</em></p>
+        
+        <div class="control-panel">
+            <button class="btn btn-secondary btn-small" onclick="speakNota()">🔊 Dengar Nota</button>
+            <button class="btn" onclick="nextNota()">Seterusnya</button>
+        </div>
+    </div>
+
+    <!-- Skrin 4: Latihan Pemanasan -->
+    <div id="screen-4" class="screen">
+        <h2>Latihan Pemanasan</h2>
+        <p>Pilih kata adjektif yang betul berdasarkan gambar di bawah:</p>
+        <div style="font-size: 4rem; margin: 10px;">🍬</div>
+        <p><strong>Gula</strong></p>
+        <div id="warmup-options" class="grid-container"></div>
+        <div id="warmup-feedback" class="feedback-box" style="display:none;"></div>
+        <div class="control-panel">
+            <button class="btn btn-secondary btn-small" onclick="speakText('Pilih kata adjektif yang betul untuk gula.')">🔊 Ulang Arahan</button>
+        </div>
+    </div>
+
+    <!-- Skrin 5 & 6: Misi Utama & Cabaran -->
+    <div id="screen-game" class="screen">
+        <h2 id="mission-title">Misi 1: Jom Rasa!</h2>
+        <p id="question-text">Pilih kata adjektif yang sesuai.</p>
+        <div id="question-media" style="font-size: 4.5rem; margin: 10px;">🍋</div>
+        <div id="options-container" class="grid-container"></div>
+        <div id="game-feedback" class="feedback-box" style="display:none;"></div>
+        
+        <div class="control-panel">
+            <button class="btn btn-secondary btn-small" onclick="repeatInstruction()">🔊 Ulang Arahan</button>
+            <button class="btn btn-secondary btn-small" onclick="showNotaModal()">📖 Lihat Nota</button>
+        </div>
+    </div>
+
+    <!-- Skrin 7: Keputusan Akhir -->
+    <div id="screen-result" class="screen">
+        <h1>Tahniah! Misi Selesai 🎉</h1>
+        <div style="font-size: 4rem;">🏆</div>
+        <h2>Pencapaian: <span id="achievement-badge">Juara Pancaindera</span></h2>
+        <p style="font-size: 1.4rem;">
+            Jumlah Markah: <strong id="final-score">0</strong><br>
+            Soalan Betul: <strong id="correct-count">0</strong> / 6
+        </p>
+        <div id="analysis-box" style="background-color: #E2F0CB; padding: 15px; border-radius: 15px; margin-bottom: 20px; max-width: 600px;">
+            <p id="strength-text" style="margin: 5px 0;"></p>
+            <p id="weakness-text" style="margin: 5px 0;"></p>
+        </div>
+        <div>
+            <button class="btn" onclick="restartGame()">Main Semula</button>
+            <button class="btn btn-secondary" onclick="startNota()">Ulang Kaji Nota</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Data Pembelajaran & Soalan berdasarkan Nota
+    const notaData = [
+        { deria: "Deria Rasa", icon: "👅", words: "manis, masam, pahit, masin, pedas, tawar", example: "Gula itu manis." },
+        { deria: "Deria Pandang / Lihat", icon: "👁️", words: "cantik, terang, gelap, jelas, berwarna-warni", example: "Pelangi itu berwarna-warni." },
+        { deria: "Deria Dengar", icon: "👂", words: "merdu, bising, kuat, perlahan, sunyi", example: "Burung menyanyi dengan merdu." },
+        { deria: "Deria Bau", icon: "👃", words: "wangi, harum, busuk, hapak", example: "Bunga rose itu harum." },
+        { deria: "Deria Sentuh", icon: "🖐️", words: "kasar, keras, lembut, halus, licin", example: "Batu itu keras." }
+    ];
+
+    const questions = [
+        // Misi 1: Rasa
+        { mission: "Misi 1: Jom Rasa!", text: "Apakah rasa bagi buah lemon?", icon: "🍋", options: ["masam", "manis", "pahit"], answer: "masam", category: "Rasa" },
+        // Misi 2: Lihat
+        { mission: "Misi 2: Jom Lihat!", text: "Suasana malam tanpa lampu terasa...", icon: "🌙", options: ["gelap", "terang", "cantik"], answer: "gelap", category: "Lihat" },
+        // Misi 3: Dengar
+        { mission: "Misi 3: Jom Dengar!", text: "Bunyi radio itu sangat...", icon: "📻", options: ["kuat", "kasar", "wangi"], answer: "kuat", category: "Dengar" },
+        // Misi 4: Bau
+        { mission: "Misi 4: Jom Hidu!", text: "Sampah yang menimbun itu berbau...", icon: "🗑️", options: ["busuk", "harum", "manis"], answer: "busuk", category: "Bau" },
+        // Misi 5: Sentuh
+        { mission: "Misi 5: Jom Sentuh!", text: "Permukaan batu itu terasa...", icon: "🪨", options: ["keras", "lembut", "licin"], answer: "keras", category: "Sentuh" },
+        // Cabaran Campuran
+        { mission: "Cabaran Akhir: Campuran", text: "Bunga rose ini berbau ____ dan kelihatan ____.", icon: "🌹", options: ["harum & cantik", "busuk & gelap", "pahit & bising"], answer: "harum & cantik", category: "Campuran" }
+    ];
+
+    let currentNotaIndex = 0;
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let correctTracker = { Rasa: true, Lihat: true, Dengar: true, Bau: true, Sentuh: true };
+    let correctCount = 0;
+
+    // Fungsi Navigasi Skrin
+    function goToScreen(screenNum) {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById(`screen-${screenNum}`).classList.add('active');
+        document.getElementById('game-header').style.display = (screenNum >= 4) ? 'flex' : 'none';
+    }
+
+    function openManual() {
+        goToScreen(2);
+    }
+
+    // Fungsi Text-to-Speech (Audio)
+    function speakText(text) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ms-MY';
+            utterance.rate = 0.85; // Kelajuan perlahan untuk murid inklusif
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    // Pengurusan Nota
+    function startNota() {
+        currentNotaIndex = 0;
+        showNota();
+        goToScreen(3);
+    }
+
+    function showNota() {
+        const data = notaData[currentNotaIndex];
+        document.getElementById('nota-title').innerText = data.deria;
+        document.getElementById('nota-icon').innerText = data.icon;
+        document.getElementById('nota-content').innerHTML = `Contoh kata adjektif: <strong>${data.words}</strong>`;
+        document.getElementById('nota-example').innerHTML = `<em>"${data.example}"</em>`;
+        speakNota();
+    }
+
+    function speakNota() {
+        const data = notaData[currentNotaIndex];
+        speakText(`${data.deria}. Perkataan: ${data.words}. Contoh: ${data.example}`);
+    }
+
+    function nextNota() {
+        currentNotaIndex++;
+        if (currentNotaIndex < notaData.length) {
+            showNota();
+        } else {
+            startWarmup();
+        }
+    }
+
+    // Pemanasan
+    function startWarmup() {
+        goToScreen(4);
+        const optionsDiv = document.getElementById('warmup-options');
+        optionsDiv.innerHTML = '';
+        const options = ["manis", "pahit", "masin"];
+        
+        options.forEach(opt => {
+            const btn = document.createElement('div');
+            btn.className = 'card';
+            btn.innerText = opt;
+            btn.onclick = () => checkWarmup(opt);
+            optionsDiv.appendChild(btn);
+        });
+        speakText("Soalan pemanasan. Apakah rasa gula?");
+    }
+
+    function checkWarmup(selected) {
+        const feedback = document.getElementById('warmup-feedback');
+        feedback.style.display = 'flex';
+        if (selected === 'manis') {
+            feedback.className = 'feedback-box feedback-correct';
+            feedback.innerText = "Betul! Hebat! Gula rasanya manis.";
+            speakText("Betul! Hebat! Gula rasanya manis.");
+            setTimeout(() => {
+                startGame();
+            }, 1500);
+        } else {
+            feedback.className = 'feedback-box feedback-wrong';
+            feedback.innerText = "Cuba lagi. Gula memberikan rasa manis.";
+            speakText("Cuba lagi. Gula memberikan rasa manis.");
+        }
+    }
+
+    // Pengurusan Game/Misi Utama
+    function startGame() {
+        currentQuestionIndex = 0;
+        score = 0;
+        correctCount = 0;
+        updateHeader();
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-game').classList.add('active');
+        document.getElementById('game-header').style.display = 'flex';
+        loadQuestion();
+    }
+
+    function updateHeader() {
+        document.getElementById('score-display').innerText = score;
+        const progress = ((currentQuestionIndex) / questions.length) * 100;
+        document.getElementById('progress-bar').style.width = `${progress}%`;
+    }
+
+    function loadQuestion() {
+        const q = questions[currentQuestionIndex];
+        document.getElementById('stage-title').innerText = q.mission;
+        document.getElementById('mission-title').innerText = q.mission;
+        document.getElementById('question-text').innerText = q.text;
+        document.getElementById('question-media').innerText = q.icon;
+        
+        const feedback = document.getElementById('game-feedback');
+        feedback.style.display = 'none';
+
+        const container = document.getElementById('options-container');
+        container.innerHTML = '';
+
+        q.options.forEach(opt => {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerText = opt;
+            card.onclick = () => checkAnswer(opt);
+            container.appendChild(card);
+        });
+
+        speakText(`${q.mission}. ${q.text}`);
+        updateHeader();
+    }
+
+    function checkAnswer(selected) {
+        const q = questions[currentQuestionIndex];
+        const feedback = document.getElementById('game-feedback');
+        feedback.style.display = 'flex';
+
+        if (selected === q.answer) {
+            score += 20;
+            correctCount++;
+            feedback.className = 'feedback-box feedback-correct';
+            feedback.innerText = "Betul! Hebat!";
+            speakText("Betul! Hebat!");
+            
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < questions.length) {
+                    loadQuestion();
+                } else {
+                    showResults();
+                }
+            }, 1500);
+        } else {
+            correctTracker[q.category] = false;
+            feedback.className = 'feedback-box feedback-wrong';
+            feedback.innerText = `Cuba lagi. Petunjuk: Lihat gambar ${q.icon} dengan teliti.`;
+            speakText("Cuba lagi.");
+        }
+        document.getElementById('score-display').innerText = score;
+    }
+
+    function repeatInstruction() {
+        const q = questions[currentQuestionIndex];
+        speakText(q.text);
+    }
+
+    function showNotaModal() {
+        alert("Nota Ringkas:\nRasa: manis, masam\nLihat: terang, gelap\nDengar: kuat, merdu\nBau: wangi, busuk\nSentuh: keras, halus");
+    }
+
+    // Keputusan Akhir
+    function showResults() {
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        document.getElementById('screen-result').classList.add('active');
+        document.getElementById('game-header').style.display = 'none';
+
+        document.getElementById('final-score').innerText = score;
+        document.getElementById('correct-count').innerText = correctCount;
+
+        // Analisis Kekuatan & Perkara Perlu Diulangi
+        let strength = "Kamu sangat mahir dalam mengenal Kata Adjektif Pancaindera!";
+        let weakness = "Mari tingkatkan ulangkaji untuk semua deria.";
+
+        document.getElementById('strength-text').innerText = "💪 " + strength;
+        document.getElementById('weakness-text').innerText = "📚 " + weakness;
+
+        speakText("Tahniah! Misi Selesai. Kamu telah berjaya memulihkan Kuasa Pancaindera!");
+    }
+
+    function restartGame() {
+        goToScreen(1);
+    }
+</script>
+</body>
+</html>
